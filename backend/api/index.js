@@ -1,27 +1,48 @@
-import app from '../src/app.js';
-import { connectDB } from '../src/config/db.js';
-import { logger } from '../src/utils/logger.js';
+import express from 'express';
+import cors from 'cors';
 
-let dbConnected = false;
+const app = express();
 
-async function ensureDB() {
-  if (!dbConnected) {
-    await connectDB();
-    dbConnected = true;
-    logger.info('MongoDB connected for Vercel Serverless');
-  }
-}
+const allowedOrigins = [
+  'http://localhost:5175',
+  'http://localhost:5173',
+  process.env.CLIENT_URL,
+  'https://canpouch-frontend.vercel.app'
+].filter(Boolean);
 
-app.use(async (req, res, next) => {
-  if (!dbConnected && process.env.VERCEL === 'true') {
-    await ensureDB();
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS Error: Origin '${origin}' not allowed`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
   next();
 });
 
-app.get('/api/v1/health', async (req, res) => {
-  await ensureDB();
-  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+app.get('/api/v1/test', (req, res) => {
+  res.json({ message: 'Test endpoint working!' });
+});
+
+app.get('/api/v1/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+app.post('/api/v1/test-post', (req, res) => {
+  res.json({ received: req.body, success: true });
 });
 
 export default app;
