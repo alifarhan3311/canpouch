@@ -54,24 +54,25 @@ app.use((req, res, next) => {
   next();
 });
 
-// 2. Dynamic CORS Restrictions
+// 2. CORS - Handle preflight BEFORE routes
 const getAllowedOrigins = () => {
   const origins = [];
   if (process.env.CLIENT_URL) origins.push(...process.env.CLIENT_URL.split(','));
-  if (process.env.VERCEL === 'true') origins.push('https://canpouch-frontend.vercel.app');
+  if (process.env.VERCEL === 'true') origins.push('https://canpouch.vercel.app');
   if (process.env.NODE_ENV !== 'production') origins.push('http://localhost:5175', 'http://localhost:5173');
   return origins;
 };
 const allowedOrigins = getAllowedOrigins();
-
-// Handle CORS preflight (OPTIONS) explicitly
-app.options('*', (req, res) => {
+app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400');
-  res.status(200).end();
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
 });
 
 app.use(
