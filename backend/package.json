@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "seed": "node seeders/seed.js"
+    "seed": "node seeders/seed.js",
+    "vc:dev": "vc dev --port 5000",
+    "vc:prod": "vc deploy --prod"
   },
   "dependencies": {
     "@vercel/node": "^5.8.26",

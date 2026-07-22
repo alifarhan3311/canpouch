@@ -55,11 +55,17 @@ app.use((req, res, next) => {
 });
 
 // 2. Dynamic CORS Restrictions
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5175,http://localhost:5173').split(',');
+const getAllowedOrigins = () => {
+  const origins = [];
+  if (process.env.CLIENT_URL) origins.push(...process.env.CLIENT_URL.split(','));
+  if (process.env.VERCEL === 'true') origins.push('https://canpouch-frontend.vercel.app');
+  if (process.env.NODE_ENV !== 'production') origins.push('http://localhost:5175', 'http://localhost:5173');
+  return origins;
+};
+const allowedOrigins = getAllowedOrigins();
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server) or from allowed origins
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
