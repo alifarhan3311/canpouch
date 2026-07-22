@@ -1,13 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import API from '../api/axios';
 
-// Async thunk to verify session via HttpOnly cookies on application load
+// Async thunk to verify session via HttpOnly cookies on application load.
+// A 401 here is expected for guests — not an error, just means no active session.
 export const checkAuth = createAsyncThunk('auth/checkAuth', async (_, { rejectWithValue }) => {
   try {
     const response = await API.get('/auth/profile');
     return response.data.data;
   } catch (error) {
-    return rejectWithValue(error.response?.data?.message || 'Session expired');
+    const status = error.response?.status;
+    // 401 = no session, treat silently as "not logged in"
+    if (status === 401) {
+      return rejectWithValue(null);
+    }
+    return rejectWithValue(error.response?.data?.message || 'Session check failed');
   }
 });
 
