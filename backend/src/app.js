@@ -56,16 +56,33 @@ app.use((req, res, next) => {
 
 // 2. CORS - Handle preflight BEFORE routes
 const getAllowedOrigins = () => {
-  const origins = [];
-  if (process.env.CLIENT_URL) origins.push(...process.env.CLIENT_URL.split(','));
-  if (process.env.VERCEL === 'true') origins.push('https://canpouch.vercel.app');
-  if (process.env.NODE_ENV !== 'production') origins.push('http://localhost:5175', 'http://localhost:5173');
+  const origins = [
+    'https://canpouch.vercel.app',
+    'https://canpouch-backend.vercel.app',
+    'http://localhost:5175',
+    'http://localhost:5173'
+  ];
+  // Add any extra origins from env (comma-separated)
+  if (process.env.CLIENT_URL) {
+    process.env.CLIENT_URL.split(',').forEach(o => {
+      const trimmed = o.trim();
+      if (trimmed && !origins.includes(trimmed)) origins.push(trimmed);
+    });
+  }
   return origins;
 };
+
 const allowedOrigins = getAllowedOrigins();
+
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    // server-to-server or direct call
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400');
@@ -85,7 +102,7 @@ app.use(
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
   })
 );
