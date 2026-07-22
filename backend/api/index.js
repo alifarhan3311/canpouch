@@ -7,7 +7,7 @@ const allowedOrigins = [
   'http://localhost:5175',
   'http://localhost:5173',
   process.env.CLIENT_URL,
-  'https://canpouch-frontend.vercel.app'
+  'https://canpouch.vercel.app'
 ].filter(Boolean);
 
 app.use(cors({
