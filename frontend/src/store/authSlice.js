@@ -17,10 +17,23 @@ export const checkAuth = createAsyncThunk('auth/checkAuth', async (_, { rejectWi
   }
 });
 
-const user = sessionStorage.getItem('user');
+const parseStoredUser = () => {
+  try {
+    const raw = sessionStorage.getItem('user');
+    if (!raw || raw === 'undefined' || raw === 'null') return null;
+    const parsed = JSON.parse(raw);
+    // Make sure it's an actual user object, not a primitive
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    sessionStorage.removeItem('user');
+    return null;
+  }
+};
+
+const storedUser = parseStoredUser();
 const initialState = {
-  user: user ? JSON.parse(user) : null,
-  isAuthenticated: !!user,
+  user: storedUser,
+  isAuthenticated: !!storedUser,
   loading: true
 };
 
@@ -30,6 +43,7 @@ const authSlice = createSlice({
   reducers: {
     setCredentials: (state, action) => {
       const { user } = action.payload;
+      if (!user || typeof user !== 'object') return;
       state.user = user;
       state.isAuthenticated = true;
       state.loading = false;
@@ -49,10 +63,17 @@ const authSlice = createSlice({
         state.loading = true;
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
-        state.user = action.payload;
-        state.isAuthenticated = true;
+        const user = action.payload;
+        if (user && typeof user === 'object') {
+          state.user = user;
+          state.isAuthenticated = true;
+          sessionStorage.setItem('user', JSON.stringify(user));
+        } else {
+          state.user = null;
+          state.isAuthenticated = false;
+          sessionStorage.removeItem('user');
+        }
         state.loading = false;
-        sessionStorage.setItem('user', JSON.stringify(action.payload));
       })
       .addCase(checkAuth.rejected, (state) => {
         state.user = null;
