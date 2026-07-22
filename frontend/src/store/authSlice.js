@@ -11,9 +11,10 @@ export const checkAuth = createAsyncThunk('auth/checkAuth', async (_, { rejectWi
   }
 });
 
+const user = sessionStorage.getItem('user');
 const initialState = {
-  user: JSON.parse(sessionStorage.getItem('user')) || null,
-  isAuthenticated: !!sessionStorage.getItem('user'),
+  user: user ? JSON.parse(user) : null,
+  isAuthenticated: !!user,
   loading: true
 };
 

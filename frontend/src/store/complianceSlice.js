@@ -1,7 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const storedAgeGate = localStorage.getItem('ageVerifiedStatus');
-const initialVerified = storedAgeGate ? JSON.parse(storedAgeGate) : null;
+let initialVerified = null;
+try {
+  initialVerified = storedAgeGate ? JSON.parse(storedAgeGate) : null;
+} catch (e) {
+  initialVerified = null;
+}
 
 const initialState = {
   isAgeVerified: initialVerified ? initialVerified.isVerified : false,
