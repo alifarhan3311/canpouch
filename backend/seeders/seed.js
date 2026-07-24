@@ -25,7 +25,8 @@ const getRandomImg = (type) => {
 
 const seedData = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/canpouch_db');
+    console.log(process.env.MONGODB_URI);
+    await mongoose.connect("mongodb+srv://alifarhan1531_db_user:7yOEDrGW9vCzrrPY@cluster0.goz87ui.mongodb.net/?appName=Cluster0" || 'mongodb://localhost:27017/canpouch_db');
     console.log('Connected to MongoDB for seeding 50 products...');
 
     // Clear existing collections
